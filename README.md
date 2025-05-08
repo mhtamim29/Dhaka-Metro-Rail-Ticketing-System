@@ -7,5 +7,5 @@ user id: 21303138@iubat.edu
 Passsword:12345678
 
 https://mhtamim29.github.io/Dhaka-Metro-Rail/admindashboard.html
-user id: admin@dmtcl
+user id: admin@dmtcl.com
 Passsword:12345678
