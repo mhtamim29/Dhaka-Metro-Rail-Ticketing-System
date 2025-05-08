@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhaka Metro Rail</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kameron:wght@400;700&display=swap">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="css/body.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/notice.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/Footer.css">
+    <script src="Js/index.js"></script>
+    <style>
+        .notice-header {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.center-title {
+    text-align: center;
+}
+
+.filters-sort-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: left;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.sort-options {
+    display: flex;
+    align-items: right;
+    gap: 5px;
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <img src="picture/logo.png" alt="Dhaka Metro Rail" style="max-height: 80px;">
+            </div>
+            <nav>
+                <ul class="nav-links">
+                    <li><a href="#" id="homeLink">HOME</a></li>
+                    <li><a href="buyticket.php">BUY TICKET</a></li>
+                    <li><a href="help&support.php">HELP & SUPPORT</a></li>
+                    <li><a href="myticket.php">MY TICKETS</a></li>
+                    <li><a href="travelhistory.php">TRAVEL HISTORY</a></li>
+                    <li><a href="profile.php">PROFILE</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main style="padding-top: 130px;padding-bottom: 30px;" class="container">
+        <section class="content-row">
+            <div class="notice-container" style="max-width: 1600px;width: 100%; margin: 0 auto;">
+                <div class="notice-header">
+                    <div class="center-title">
+                        <h2 class="section-title">Notices & Alerts</h2>
+                    </div>
+                
+                    <div class="filters-sort-row">
+                        <div class="filter-tabs">
+                            <button class="tab-btn active" onclick="filterNotices('all')">All</button>
+                            <button class="tab-btn" onclick="filterNotices('schedule')">Schedule</button>
+                            <button class="tab-btn" onclick="filterNotices('maintenance')">Maintenance</button>
+                            <button class="tab-btn" onclick="filterNotices('safety')">Safety</button>
+                            <button class="tab-btn" onclick="filterNotices('general')">General</button>
+                            <button class="tab-btn" onclick="filterNotices('lost')">Lost & Found</button>
+                        </div>
+                
+                        <div class="sort-options">
+                            <span class="sort-label">Sort by:</span>
+                            <select class="sort-select" onchange="sortNotices(this.value)">
+                                <option value="newest">Newest First</option>
+                                <option value="oldest">Oldest First</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+               
+                <div class="notices-list" id="noticesList">
+                    <!-- Notices will be loaded here via JavaScript -->
+                    <div class="loading-spinner">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p>Loading notices...</p>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="back-btn" onclick="goBack()">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <button class="view-more-btn" onclick="showMoreNotices()" style="display: none;">View More Notices</button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <h3>Company Information:</h3>
+                <p>Dhaka Mass Transit Company Limited (DMTCL)</p>
+                <p>Metro Rail Bhaban, Uttara, Dhaka-1230, Bangladesh</p>
+                <p>Email: info@dmtcl.gov.bd</p>
+                <p>☎ Helpline: +880 1234 567 890</p>
+            </div>
+            <div style="margin-left: 50px;padding-left: 50px;" class="footer-section">
+                <h3>About</h3>
+                <p style="line-height: 3ch; text-align: justify;">Dhaka Metro Rail is a modern mass rapid transit system operated by Dhaka Mass Transit Company Limited (DMTCL). It aims to provide a fast, safe, and eco-friendly transportation solution for the people of Dhaka, reducing congestion and improving urban mobility.</p>
+            </div>
+            <div style="margin-left: 120px;" class="footer-section">
+                <h3>Quick Links:</h3>
+                <p>Contact Us</p>
+                <p>FAQs</p>
+                <p>Terms & Conditions</p>
+                <p>Privacy Policy</p>
+                <h3>Follow Us:</h3>
+                <div class="social-icons">
+                    <a href="https://www.facebook.com" target="_blank" class="text-dark me-3"><i class="fab fa-facebook fa-2x"></i></a>
+                    <a href="https://twitter.com" target="_blank" class="text-dark me-3"><i class="fab fa-twitter fa-2x"></i></a>
+                    <a href="https://www.instagram.com" target="_blank" class="text-dark me-3"><i class="fab fa-instagram fa-2x"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <div class="copyright">
+        <p><strong>Copyright & Disclaimer:</strong></p>
+        <p>&copy; 2025 Dhaka Mass Transit Company Limited (DMTCL). All rights reserved.</p>
+    </div>
+    
+    <script>
+        // Global variables
+        let allNotices = [];
+        let displayedCount = 0;
+        let currentFilter = 'all';
+        let currentSort = 'newest';
+        const itemsPerPage = 6;
+
+        // Load notices when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up the home link based on login status
+            const homeLink = document.getElementById('homeLink');
+            
+            // Check if user is logged in
+            fetch('session_check_notice.php')
+                .then(response => response.json())
+                .then(data => {
+                    homeLink.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        if (data.isLoggedIn) {
+                            window.location.href = 'home.php';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error checking login status:', error);
+                    // Default to non-logged in behavior
+                    homeLink.href = 'index.html';
+                });
+            
+            // Fetch notices from the server
+            fetch('get_notices.php')
+                .then(response => response.json())
+                .then(data => {
+                    allNotices = data;
+                    displayNotices();
+                })
+                .catch(error => {
+                    console.error('Error fetching notices:', error);
+                    document.getElementById('noticesList').innerHTML = 
+                        '<div class="error-message">Failed to load notices. Please try again later.</div>';
+                });
+
+            // Close dropdown when clicking outside
+            window.addEventListener('click', function(event) {
+                if (!event.target.matches('.hamburger-btn') && !event.target.closest('.dropdown-menu')) {
+                    const dropdowns = document.getElementsByClassName('dropdown-menu');
+                    for (let i = 0; i < dropdowns.length; i++) {
+                        const openDropdown = dropdowns[i];
+                        if (openDropdown.classList.contains('show')) {
+                            openDropdown.classList.remove('show');
+                        }
+                    }
+                }
+            });
+        });
+
+        // Function to display notices
+        function displayNotices() {
+            const noticesList = document.getElementById('noticesList');
+            noticesList.innerHTML = '';
+            
+            // Filter notices based on current filter
+            let filteredNotices = allNotices;
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'lost') {
+                    // For Lost & Found, get items from lost_found table or with "Lost & Found" category
+                    filteredNotices = allNotices.filter(notice => 
+                        notice.source === 'lost_found' || notice.category.toLowerCase() === 'lost & found');
+                } else {
+                    // For other categories (schedule, maintenance, safety, general)
+                    filteredNotices = allNotices.filter(notice => 
+                        notice.category.toLowerCase() === currentFilter);
+                }
+            }
+            
+            // Sort notices
+            filteredNotices.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return currentSort === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+            
+            // Reset displayed count
+            displayedCount = 0;
+            
+            // Show initial set of notices
+            showNextBatch(filteredNotices);
+            
+            // Show/hide view more button
+            updateViewMoreButton(filteredNotices);
+        }
+        
+        // Function to show next batch of notices
+        function showNextBatch(filteredNotices) {
+            const noticesList = document.getElementById('noticesList');
+            const endIndex = Math.min(displayedCount + itemsPerPage, filteredNotices.length);
+            
+            for (let i = displayedCount; i < endIndex; i++) {
+                const notice = filteredNotices[i];
+                
+                // Determine CSS class based on category
+                let cssClass = 'general';
+                let tagClass = 'general-tag';
+                
+                if (notice.category === 'Lost & Found' || notice.source === 'lost_found') {
+                    cssClass = 'lost';
+                    tagClass = 'lost-tag';
+                } else if (notice.category === 'Schedule') {
+                    cssClass = 'schedule';
+                    tagClass = 'schedule-tag';
+                } else if (notice.category === 'Maintenance') {
+                    cssClass = 'maintenance';
+                    tagClass = 'maintenance-tag';
+                } else if (notice.category === 'Safety') {
+                    cssClass = 'safety';
+                    tagClass = 'safety-tag';
+                }
+                
+                // Format date to DD/MM/YYYY
+                const dateObj = new Date(notice.date);
+                const formattedDate = `${String(dateObj.getDate()).padStart(2, '0')}/${String(dateObj.getMonth() + 1).padStart(2, '0')}/${dateObj.getFullYear()}`;
+                
+                const noticeItem = document.createElement('div');
+                noticeItem.className = `notice-item ${cssClass}`;
+                noticeItem.innerHTML = `
+                    <div class="notice-date">${formattedDate}</div>
+                    <h3 class="notice-title">${notice.title}</h3>
+                    <p class="notice-content">${notice.content}</p>
+                    <span class="notice-tag ${tagClass}">${notice.category}</span>
+                `;
+                
+                noticesList.appendChild(noticeItem);
+            }
+            
+            displayedCount = endIndex;
+        }
+        
+        // Function to update view more button visibility
+        function updateViewMoreButton(filteredNotices) {
+            const viewMoreBtn = document.querySelector('.view-more-btn');
+            if (displayedCount < filteredNotices.length) {
+                viewMoreBtn.style.display = 'inline-block';
+            } else {
+                viewMoreBtn.style.display = 'none';
+            }
+        }
+
+        // Function to filter notices based on category
+        function filterNotices(category) {
+            currentFilter = category;
+            
+            // Update active tab
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(category)) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Display filtered notices
+            displayNotices();
+        }
+
+        // Function to sort notices
+        function sortNotices(sortBy) {
+            currentSort = sortBy;
+            displayNotices();
+        }
+
+        // Function to show more notices
+        function showMoreNotices() {
+            // Filter notices based on current filter
+            let filteredNotices = allNotices;
+            if (currentFilter !== 'all') {
+                if (currentFilter === 'lost') {
+                    // For Lost & Found, get items from lost_found table or with "Lost & Found" category
+                    filteredNotices = allNotices.filter(notice => 
+                        notice.source === 'lost_found' || notice.category.toLowerCase() === 'lost & found');
+                } else {
+                    // For other categories (schedule, maintenance, safety, general)
+                    filteredNotices = allNotices.filter(notice => 
+                        notice.category.toLowerCase() === currentFilter);
+                }
+            }
+            
+            // Sort notices
+            filteredNotices.sort((a, b) => {
+                const dateA = new Date(a.date);
+                const dateB = new Date(b.date);
+                return currentSort === 'newest' ? dateB - dateA : dateA - dateB;
+            });
+            
+            // Show next batch
+            showNextBatch(filteredNotices);
+            
+            // Update view more button
+            updateViewMoreButton(filteredNotices);
+        }
+
+        // Function to go back
+        function goBack() {
+            window.history.back();
+        }
+
+        // Hamburger menu toggle function
+        function toggleMenu() {
+            const dropdownMenu = document.getElementById('dropdownMenu');
+            dropdownMenu.classList.toggle('show');
+        }
+    </script>
+</body>
+</html>
