@@ -53,7 +53,49 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
     <link rel="stylesheet" href="css/header.css">
     <link rel="stylesheet" href="css/buyticket.css">
     <link rel="stylesheet" href="css/Footer.css">
-    <script src="Js/buyticket.js"></script>
+    <style>
+        /* Additional styles for fare card */
+        .fare-card {
+            background-color: #f0f8f4;
+            border: 1px solid #006a4e;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: center;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .metro-icon {
+            width: 70px;
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+        
+        .station-route {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .fare-amount {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 15px 0;
+            color: #006a4e;
+        }
+        
+        .metro-label {
+            color: #666;
+            font-size: 16px;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -112,11 +154,16 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
             </form>
             
             <?php if (!is_null($fare)): ?>
-                <div class="fare-display" style="text-align: center; margin: 20px 0; padding: 15px; background-color: #f0f8f4; border-radius: 8px; border: 1px solid #006a4e;">
-                    <h3 style="color: #006a4e; margin: 0;">Fare: <?= $fare ?> Taka</h3>
+                <div class="fare-card">
+                    <img src="picture/logo.png" alt="Metro" class="metro-icon">
+                    <div class="station-route">
+                        <?= ucwords(str_replace('-', ' ', $from)) ?> → <?= ucwords(str_replace('-', ' ', $to)) ?>
+                    </div>
+                    <div class="fare-amount"><?= $fare ?> Taka</div>
+                    <div class="metro-label">Dhaka Metro Rail Fare</div>
                 </div>
                 
-                <form method="POST" action="buy_ticket_handler.php">
+                <form method="POST" action="buy_ticket_handler.php" id="payment-form">
                     <input type="hidden" name="from" value="<?= $from ?>">
                     <input type="hidden" name="to" value="<?= $to ?>">
                     <input type="hidden" name="fare" value="<?= $fare ?>">
@@ -124,16 +171,16 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
                     <div class="payment-options">
                         <h2 style="color: #006a4e;text-align: center;">Payment Method</h2>
                         <div class="payment-option">
-                            <input type="radio" id="mobileBanking" name="payment_method" value="Mobile Banking">
+                            <input type="radio" id="mobileBanking" name="payment_method" value="Mobile Banking" required>
                             <label for="mobileBanking">Pay with Mobile Banking</label>
                         </div>
                         <div class="payment-option">
-                            <input type="radio" id="banking" name="payment_method" value="Banking">
+                            <input type="radio" id="banking" name="payment_method" value="Banking" required>
                             <label for="banking">Pay with Banking</label>
                         </div>
                         
                         <!-- Mobile Banking Form -->
-                        <div class="payment-form" id="mobileBankingForm">
+                        <div class="payment-form" id="mobileBankingForm" style="display: none;">
                             <h2 style="color: #006a4e;text-align: center;">Mobile Banking Payment</h2>
                             
                             <div class="mobile-banking-options">
@@ -173,7 +220,7 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
                         </div>
                         
                         <!-- Banking Form -->
-                        <div class="payment-form" id="bankingForm">
+                        <div class="payment-form" id="bankingForm" style="display: none;">
                             <h3 style="color: #006a4e;text-align: center;">Banking Payment</h3>
                             
                             <div class="banking-options">
@@ -268,29 +315,91 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
         </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Toggle payment forms based on radio selection
+        document.addEventListener('DOMContentLoaded', function(){
+            // Toggle mobile menu
+            const menuToggle = document.getElementById('menu-toggle');
+            const navLinks = document.querySelector('.nav-links');
+            
+            if(menuToggle && navLinks) {
+                menuToggle.addEventListener('click', function() {
+                    navLinks.classList.toggle('show');
+                    const expanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
+                    menuToggle.setAttribute('aria-expanded', !expanded);
+                });
+            }
+
+            // Validate same station selection
+            const cal_button = document.getElementById("calculate-fare");
+            if(cal_button) {
+                cal_button.addEventListener("click", function(e){
+                    const from_value = document.getElementById("from").value;
+                    const to_value = document.getElementById("to").value;
+
+                    if(from_value && to_value && from_value == to_value) {
+                        e.preventDefault();
+                        alert("Departure and arrival stations cannot be the same.");
+                    }
+                });
+            }
+            
+            // Payment method handling
             const mobileBankingRadio = document.getElementById('mobileBanking');
             const bankingRadio = document.getElementById('banking');
             const mobileBankingForm = document.getElementById('mobileBankingForm');
             const bankingForm = document.getElementById('bankingForm');
             
-            if(mobileBankingRadio && bankingRadio) {
-                mobileBankingRadio.addEventListener('change', function() {
-                    if(this.checked) {
-                        mobileBankingForm.style.display = 'block';
-                        bankingForm.style.display = 'none';
-                    }
-                });
-                
-                bankingRadio.addEventListener('change', function() {
-                    if(this.checked) {
-                        bankingForm.style.display = 'block';
-                        mobileBankingForm.style.display = 'none';
-                    }
-                });
-            }
+            // Mobile banking fields
+            const mobileNumber = document.getElementById('mobile-number');
+            const mobilePin = document.getElementById('mobile-pin');
             
+            // Banking fields
+            const accountNumber = document.getElementById('account-number');
+            const cardName = document.getElementById('card-name');
+            const expiry = document.getElementById('MM');
+            const cvv = document.getElementById('CVV');
+            const bankPin = document.getElementById('bank-pin');
+
+            // Function to update field requirements
+            function updateFieldRequirements() {
+                if (mobileBankingRadio.checked) {
+                    // Make mobile banking fields required
+                    mobileNumber.required = true;
+                    mobilePin.required = true;
+                    
+                    // Remove required from banking fields
+                    accountNumber.required = false;
+                    cardName.required = false;
+                    expiry.required = false;
+                    cvv.required = false;
+                    bankPin.required = false;
+                    
+                    // Show mobile banking form, hide banking form
+                    if(mobileBankingForm) mobileBankingForm.style.display = 'block';
+                    if(bankingForm) bankingForm.style.display = 'none';
+                } else if (bankingRadio.checked) {
+                    // Make banking fields required
+                    accountNumber.required = true;
+                    cardName.required = true;
+                    expiry.required = true;
+                    cvv.required = true;
+                    bankPin.required = true;
+                    
+                    // Remove required from mobile banking fields
+                    mobileNumber.required = false;
+                    mobilePin.required = false;
+                    
+                    // Show banking form, hide mobile banking form
+                    if(bankingForm) bankingForm.style.display = 'block';
+                    if(mobileBankingForm) mobileBankingForm.style.display = 'none';
+                }
+            }
+
+            // Set up payment method change listeners
+            if(mobileBankingRadio && bankingRadio) {
+                mobileBankingRadio.addEventListener('change', updateFieldRequirements);
+                bankingRadio.addEventListener('change', updateFieldRequirements);
+            }
+
             // Handle mobile banking options
             const bankOptions = document.querySelectorAll('.bank-option');
             bankOptions.forEach(option => {
@@ -298,7 +407,9 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
                     bankOptions.forEach(opt => opt.classList.remove('selected'));
                     this.classList.add('selected');
                     const bankName = this.getAttribute('data-bank');
-                    document.getElementById('payment_info_mobile').value = 'Selected method: ' + bankName;
+                    if(document.getElementById('payment_info_mobile')) {
+                        document.getElementById('payment_info_mobile').value = 'Selected method: ' + bankName;
+                    }
                 });
             });
             
@@ -309,21 +420,55 @@ if ($from && $to && isset($fareMatrix[$from][$to])) {
                     bankCardOptions.forEach(opt => opt.classList.remove('selected'));
                     this.classList.add('selected');
                     const cardType = this.getAttribute('data-card');
-                    document.getElementById('payment_info_bank').value = 'Selected card: ' + cardType;
+                    if(document.getElementById('payment_info_bank')) {
+                        document.getElementById('payment_info_bank').value = 'Selected card: ' + cardType;
+                    }
                 });
             });
-            
-            // Toggle mobile menu
-            const menuToggle = document.getElementById('menu-toggle');
-            const navLinks = document.getElementById('nav-links');
-            
-            if(menuToggle && navLinks) {
-                menuToggle.addEventListener('click', function() {
-                    navLinks.classList.toggle('show');
-                    const expanded = menuToggle.getAttribute('aria-expanded') === 'true' || false;
-                    menuToggle.setAttribute('aria-expanded', !expanded);
+
+            // Cancel button functionality
+            const cancelBtn = document.querySelector('.btn-cancel');
+            if(cancelBtn) {
+                cancelBtn.addEventListener('click', function() {
+                    window.location.href = 'buyticket.php';
                 });
             }
+
+            // Form submission validation
+            const paymentForm = document.getElementById('payment-form');
+            if (paymentForm) {
+                paymentForm.addEventListener('submit', function(e) {
+                    if (!mobileBankingRadio.checked && !bankingRadio.checked) {
+                        e.preventDefault();
+                        alert('Please select a payment method.');
+                        return;
+                    }
+
+                    if (mobileBankingRadio.checked) {
+                        // Validate mobile banking fields
+                        if (!mobileNumber.value || !mobilePin.value) {
+                            e.preventDefault();
+                            alert('Please fill all required fields for Mobile Banking payment.');
+                        }
+                    } else if (bankingRadio.checked) {
+                        // Validate banking fields
+                        if (!accountNumber.value || !cardName.value || !expiry.value || !cvv.value || !bankPin.value) {
+                            e.preventDefault();
+                            alert('Please fill all required fields for Banking payment.');
+                        }
+                    }
+                });
+            }
+
+            <?php if ($fare): ?>
+            // Scroll to fare card if it's visible
+            setTimeout(() => {
+                document.querySelector('.fare-card').scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }, 100);
+            <?php endif; ?>
         });
     </script>
 </body>
