@@ -96,7 +96,7 @@ $incomeRatio = getIncomeRatio($conn, $incomeDate);
             <nav>
                 <ul class="nav-links">
                     <li><a href="admindashboard.php">DASHBOARD</a></li>
-                    <li><a href="updatenotice.html">UPDATE NOTICE</a></li>
+                    <li><a href="updatenotice.php">UPDATE NOTICE</a></li>
                     <li><a href="lost&found.php">LOST & FOUND</a></li>
                     <li><a href="complain.php">COMPLAIN BOX</a></li>
                     <li><a href="logout.php" id="signout-link">LOGOUT</a></li>
